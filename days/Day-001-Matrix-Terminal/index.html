@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Terminal | Day 001</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Matrix Background -->
+    <canvas id="matrix"></canvas>
+
+    <!-- Terminal Window -->
+    <div class="terminal">
+
+        <!-- Window Header -->
+        <div class="terminal-header">
+            <span class="red"></span>
+            <span class="yellow"></span>
+            <span class="green"></span>
+        </div>
+
+        <!-- Terminal Content -->
+        <div class="terminal-body">
+
+            <p class="line">> Booting Matrix OS...</p>
+            <p class="line">> Loading system files...</p>
+            <p class="line">> Connecting to network...</p>
+            <p class="line">> Authentication successful.</p>
+            <p class="line">> Welcome, Agent.</p>
+
+            <div class="cursor-line">
+                <span>&gt;</span>
+                <span class="cursor"></span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

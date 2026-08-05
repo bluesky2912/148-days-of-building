@@ -14,3 +14,13 @@ Build a hacker-style Matrix terminal using HTML, CSS, and JavaScript.
 ## Status
 
 🟡 In Progress
+## Status
+
+✅ Completed
+
+## Features
+
+- Matrix Rain Animation
+- Glassmorphism Terminal
+- Blinking Cursor
+- Responsive Canvas
