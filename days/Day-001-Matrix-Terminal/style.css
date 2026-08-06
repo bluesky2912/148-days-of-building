@@ -1,132 +1,200 @@
-/* ===========================
-   Global Styles
-=========================== */
+/* ==========================================
+   Font
+========================================== */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ==========================================
+   Design tokens
+========================================== */
+:root {
+    --bg: #050806;
+    --ink: #dfe9e1;
+    --muted: #64756c;
+    --accent: #2bd876;
+    --accent-warm: #e8a94c;
+}
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
 }
 
 body {
-    background: #000;
-    color: #00ff66;
-    font-family: monospace;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "JetBrains Mono", monospace;
     overflow: hidden;
 }
-
-/* ===========================
-   Matrix Canvas
-=========================== */
 
 #matrix {
     position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
-    background: #000;
-    z-index: -1;
+    z-index: -2;
+    opacity: 0.5;
 }
 
-/* ===========================
-   Terminal Window
-=========================== */
+#crt-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(0,0,0,0) 0px,
+            rgba(0,0,0,0) 2px,
+            rgba(0,0,0,0.12) 3px
+        ),
+        radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 100%);
+}
 
 .terminal {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-
-    width: 80%;
-    max-width: 900px;
-
-    background: rgba(0, 0, 0, 0.60);
-
-    border: 1px solid #00ff66;
-    border-radius: 12px;
-
-    backdrop-filter: blur(5px);
-
+    width: min(900px, 90%);
+    height: min(650px, 85vh);
+    display: flex;
+    flex-direction: column;
+    background: rgba(3, 5, 4, 0.6);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
     overflow: hidden;
-
     box-shadow:
-        0 0 10px #00ff66,
-        0 0 30px #00ff66,
-        0 0 60px rgba(0, 255, 102, 0.2);
+        0 0 10px color-mix(in srgb, var(--accent) 30%, transparent),
+        0 0 30px color-mix(in srgb, var(--accent) 18%, transparent),
+        0 0 80px color-mix(in srgb, var(--accent) 10%, transparent);
+    transition: box-shadow .3s ease, border-color .3s ease;
 }
-
-/* ===========================
-   Terminal Header
-=========================== */
 
 .terminal-header {
     display: flex;
+    align-items: center;
     gap: 10px;
-    padding: 15px;
-    background: rgba(0, 255, 100, 0.08);
+    padding: 15px 20px;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.red,
-.yellow,
-.green {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-}
+.red, .yellow, .green { width: 14px; height: 14px; border-radius: 50%; }
+.red { background:#ff5f56; }
+.yellow { background:#ffbd2e; }
+.green { background:#27c93f; }
 
-.red {
-    background: #ff5f56;
+.terminal-title {
+    margin-left: 4px;
+    font-size: 12px;
+    letter-spacing: .5px;
+    color: var(--muted);
 }
-
-.yellow {
-    background: #ffbd2e;
-}
-
-.green {
-    background: #27c93f;
-}
-
-/* ===========================
-   Terminal Body
-=========================== */
 
 .terminal-body {
-    padding: 25px;
-    font-size: 18px;
-    line-height: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
 }
 
-.line {
-    color: #00ff66;
+#terminal-output {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-bottom: 10px;
 }
+
+#terminal-output::-webkit-scrollbar { width: 6px; }
+#terminal-output::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 10px; }
+
+.output-line {
+    white-space: pre-wrap;
+    line-height: 1.7;
+    margin-bottom: 8px;
+    color: var(--ink);
+    animation: fadeIn .25s ease;
+}
+
+.output-line.tone-accent {
+    color: var(--accent);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.output-line.tone-warn {
+    color: var(--accent-warm);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--accent-warm) 60%, transparent);
+}
+
+.output-line a { color: inherit; text-decoration: underline; }
 
 .cursor-line {
     display: flex;
     align-items: center;
+    gap: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+    padding-top: 12px;
+    transition: border-color .2s ease;
 }
 
-/* ===========================
-   Blinking Cursor
-=========================== */
-
-.cursor {
-    width: 10px;
-    height: 22px;
-    margin-left: 6px;
-    background: #00ff66;
-
-    animation: blink 1s infinite;
+.cursor-line:focus-within {
+    border-top-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-@keyframes blink {
-    0%,
-    50% {
-        opacity: 1;
-    }
+.prompt { color: var(--accent); font-size: 20px; text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
 
-    51%,
-    100% {
-        opacity: 0;
-    }
+#commandInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font-size: 18px;
+    font-family: inherit;
+    caret-color: var(--accent);
+}
+
+#commandInput::placeholder { color: var(--muted); }
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0 0 30px;
+    min-height: 10px;
+}
+
+.suggestion-chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--accent);
+    opacity: .7;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity .15s ease, background .15s ease;
+}
+
+.suggestion-chip:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .output-line { animation: none; }
+}
+
+@media (max-width: 768px) {
+    .terminal { width: 95%; height: 90vh; }
+    #commandInput { font-size: 16px; }
+    .output-line { font-size: 15px; }
 }
