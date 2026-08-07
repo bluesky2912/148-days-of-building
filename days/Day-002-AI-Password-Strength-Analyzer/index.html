@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIPHER — AI Password Strength Analyzer</title>
+<meta name="theme-color" content="#060a12">
+<meta name="description" content="Analyze password strength with real entropy math, realistic crack-time modeling and pattern detection.">
+
+<!-- PWA (host this file + manifest.json + sw.js on your own domain for real installability — see note in chat) -->
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body data-theme="dark">
+<canvas id="bgCanvas"></canvas>
+
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="mark"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <h1>CIPHER</h1>
+        <div class="status-pill"><span class="dot"></span> ANALYSIS ENGINE ARMED</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="installBtn" title="Install app" style="display:none;"><i class="fa-solid fa-download"></i></button>
+      <button class="icon-btn" id="themeToggle" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+    </div>
+  </header>
+
+  <!-- PASSWORD INPUT -->
+  <section class="card hero-card">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+
+    <label class="scan-label">Target string</label>
+
+    <div class="password-row">
+      <div class="password-box">
+        <input type="password" id="password" placeholder="Start typing…" autocomplete="new-password" spellcheck="false">
+      </div>
+      <button class="action-btn" id="togglePassword" title="Show/hide"><i class="fa-solid fa-eye"></i></button>
+      <button class="action-btn" id="copyPassword" title="Copy"><i class="fa-solid fa-copy"></i></button>
+      <button class="action-btn" id="generatePassword" title="Generate strong password"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+    </div>
+
+    <div class="meter-row">
+      <div class="gauge-wrap">
+        <canvas id="gaugeCanvas" width="150" height="150"></canvas>
+        <div class="gauge-center">
+          <div class="score" id="scoreNum">0</div>
+          <div class="of100">/ 100</div>
+        </div>
+      </div>
+      <div class="meter-info">
+        <div class="badge" id="badgeLabel"><span>⬤</span> Weak</div>
+        <div class="ai-line" id="aiAnalysis">Start typing to receive intelligent feedback…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="card">
+    <h2><i class="fa-solid fa-list-ol"></i> Character Breakdown <span class="tag">LIVE</span></h2>
+    <div class="stats">
+      <div><span>Length</span><strong id="length">0</strong></div>
+      <div><span>Uppercase</span><strong id="uppercase">0</strong></div>
+      <div><span>Lowercase</span><strong id="lowercase">0</strong></div>
+      <div><span>Numbers</span><strong id="numbers">0</strong></div>
+      <div><span>Symbols</span><strong id="symbols">0</strong></div>
+    </div>
+  </section>
+
+  <!-- COMPOSITION + ENTROPY -->
+  <section class="split">
+    <div class="card">
+      <h2><i class="fa-solid fa-chart-pie"></i> Composition</h2>
+      <div class="donut-row">
+        <canvas id="donutCanvas" width="110" height="110"></canvas>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><i class="fa-solid fa-dice"></i> Entropy</h2>
+      <div class="entropy-value" id="entropy">0 <span style="font-size:1rem;color:var(--text-muted);">bits</span></div>
+      <div class="entropy-bar-track"><div class="entropy-bar-fill" id="entropyBar"></div></div>
+      <div class="entropy-sub" id="entropySub">Higher entropy = exponentially more guesses required.</div>
+    </div>
+  </section>
+
+  <!-- PATTERNS -->
+  <section class="card">
+    <h2><i class="fa-solid fa-triangle-exclamation"></i> Pattern Detection</h2>
+    <div class="pattern-list" id="patternList"></div>
+  </section>
+
+  <!-- CRACK TIME -->
+  <section class="card">
+    <h2><i class="fa-solid fa-stopwatch"></i> Estimated Crack Time <span class="tag">SIMULATED</span></h2>
+    <div class="crack-grid">
+      <div class="crack-row">
+        <i class="fa-solid fa-globe"></i>
+        <div class="label"><b>Online — throttled</b><small>~100 guesses/hour, rate-limited login</small></div>
+        <div class="time" id="t1">Instant</div>
+      </div>
+      <div class="crack-row">
+        <i class="fa-solid fa-bolt"></i>
+        <div class="label"><b>Online — unthrottled</b><small>~10 guesses/sec, no rate limit</small></div>
+        <div class="time" id="t2">Instant</div>
+      </div>
+      <div class="crack-row">
+        <i class="fa-solid fa-server"></i>
+        <div class="label"><b>Offline — slow hash</b><small>~10k guesses/sec, e.g. bcrypt</small></div>
+        <div class="time" id="t3">Instant</div>
+      </div>
+      <div class="crack-row">
+        <i class="fa-solid fa-microchip"></i>
+        <div class="label"><b>Offline — GPU cluster</b><small>~10B guesses/sec, fast hash</small></div>
+        <div class="time" id="t4">Instant</div>
+      </div>
+    </div>
+    <div class="counter-strip">
+      <span class="lbl">LIVE ATTACK SIMULATION · ATTEMPTS TRIED</span>
+      <span class="num" id="attemptCounter">0</span>
+    </div>
+  </section>
+
+  <!-- SUGGESTIONS -->
+  <section class="card">
+    <h2><i class="fa-solid fa-lightbulb"></i> Suggestions</h2>
+    <ul id="suggestions"></ul>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="card">
+    <h2><i class="fa-solid fa-clock-rotate-left"></i> Scan History <span class="tag">LOCAL ONLY</span></h2>
+    <div id="historyList"><div class="history-empty">No scans yet — analyses are logged automatically as you type (only a hash is stored, never the password itself).</div></div>
+    <button class="clear-history" id="clearHistory"><i class="fa-solid fa-trash"></i> Clear history</button>
+  </section>
+
+  <footer>
+    Everything runs locally in your browser. No password is ever transmitted or stored in plain text.<br>
+    Install manifest.json + sw.js on your own domain to make this installable as a real PWA.
+  </footer>
+
+</div>
+
+<div id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg">Copied</span></div>
+
+<script src="script.js"></script>
+</body>
+</html>
