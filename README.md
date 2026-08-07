@@ -1,36 +1,35 @@
-# 148-days-of-building
-🎮 148 days of games, AI, cybersecurity, and creative coding. One project every day until December 31, 2026.
-# 🎮 148 Days of Building
+# 🚀 148 Days of Building
 
 > Building something every day until December 31, 2026.
 
-## 🎯 Mission
+148 days of games, AI, cybersecurity, web development, developer tools, and creative coding.
 
-I'm spending the next 148 days building games, AI projects, cybersecurity tools, websites, and creative experiments.
-
-The goal isn't perfection.
-
-The goal is consistency.
-
-## 📊 Progress
-
-- ✅ Day 001
-- ⬜ Day 002
-- ⬜ Day 003
-- ⬜ ...
-- ⬜ Day 148
-
-## 🛠️ Categories
-
-- 🎮 Game Development
-- 🔐 Cybersecurity
-- 🤖 Artificial Intelligence
-- 🌐 Web Development
-- ⚙️ Developer Tools
-- 🧪 Creative Coding
+One day.
+One project.
+One commit closer.
 
 ---
 
-**Current Streak:** 🔥 1 Day
+## 🎯 Mission
 
-**Projects Completed:** 0 / 148
+I'm spending the next 148 days building and shipping something every day.
+
+The goal isn't perfection.
+
+The goal is **consistency, experimentation, and getting better by building.**
+
+This repository documents the entire journey.
+
+---
+
+## 📊 Progress
+
+**2 / 148 Projects Completed**
+
+```text
+Day 001  ████████████████████ ✅
+Day 002  ████████████████████ ✅
+Day 003  ░░░░░░░░░░░░░░░░░░░░ ⬜
+Day 004  ░░░░░░░░░░░░░░░░░░░░ ⬜
+...
+Day 148  ░░░░░░░░░░░░░░░░░░░░ ⬜
