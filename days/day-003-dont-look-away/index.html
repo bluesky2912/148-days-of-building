@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DON'T LOOK AWAY — CCTV horror surveillance game">
+  <title>DON'T LOOK AWAY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main id="app">
+  <canvas id="staticCanvas" aria-hidden="true"></canvas>
+  <div id="threatVignette" aria-hidden="true"></div>
+  <div id="flashlight" aria-hidden="true"></div>
+
+  <header class="hud">
+    <div class="hud-left">
+      <div class="system-title">SEC-7</div>
+      <div class="system-subtitle">NIGHT SURVEILLANCE</div>
+    </div>
+
+    <div class="hud-center">
+      <div class="clock-label">LOCAL TIME</div>
+      <div id="clockVal" class="clock">12:00AM</div>
+      <div class="shift-track"><div id="shiftFill" class="shift-fill"></div></div>
+    </div>
+
+    <div class="hud-right">
+      <div class="stat"><span class="stat-label">STABILITY</span><span id="stabilityVal" class="stat-value">100%</span></div>
+      <div class="meter-track"><div id="stabilityBar" class="meter-fill"></div></div>
+      <div class="stat"><span class="stat-label">ANOMALY WINDOW</span><span id="threatVal" class="stat-value">—</span></div>
+      <div class="meter-track"><div id="threatFill" class="meter-fill"></div></div>
+    </div>
+  </header>
+
+  <section class="game-area">
+    <section id="grid" class="camera-grid" aria-label="Security cameras"></section>
+
+    <section class="control-panel">
+      <div class="control-left">
+        <span class="control-label">SCORE</span>
+        <span id="scoreVal" class="score">0</span>
+      </div>
+      <div class="control-center">
+        <div>
+          <div class="streak-label">OBSERVER STREAK</div>
+          <div id="streakVal" class="streak">x1.0</div>
+        </div>
+      </div>
+      <div class="control-right">
+        <button id="pauseBtn" class="pause-btn" type="button">PAUSE</button>
+        <span class="status-light"></span>
+        <span>ONLINE</span>
+      </div>
+    </section>
+
+    <section class="event-panel">
+      <div class="panel-heading"><span>SYSTEM LOG</span><span>SEC-7</span></div>
+      <div id="logFeed" class="log-feed">
+        <div class="log-entry sys-good">SYSTEM INITIALIZED.</div>
+        <div class="log-entry">ALL CAMERAS CONNECTED.</div>
+        <div class="log-entry">WAITING FOR OPERATOR...</div>
+      </div>
+    </section>
+  </section>
+
+  <div id="pauseOverlay" class="pause-overlay">
+    <h2>SHIFT PAUSED</h2>
+    <p>The cameras keep recording. Nothing can hurt you while you're away from the desk. Resume when ready.</p>
+    <button id="resumeBtn" class="resume-btn" type="button">RESUME SHIFT</button>
+  </div>
+
+  <div id="manipOverlay" class="manip-overlay" aria-hidden="true"><span class="line"></span></div>
+  <div id="jumpscareFlash" class="jumpscare-flash" aria-hidden="true"></div>
+  <div id="toast" class="toast">
+    <div class="toast-label">BADGE UNLOCKED</div>
+    <div id="toastName" class="toast-name"></div>
+    <div id="toastDesc" class="toast-desc"></div>
+  </div>
+
+  <section id="startScreen" class="screen start-screen">
+    <div class="start-content">
+      <div class="warning">SECURITY LEVEL: 7</div>
+      <h1>DON'T LOOK AWAY</h1>
+      <p class="start-description">
+        Four rooms. One operator. Something changes when you're not looking.<br>
+        Catch it fast. Trust nothing you didn't verify yourself. Survive until dawn.
+      </p>
+      <div class="warning-box">
+        <span class="warning-symbol">⚠</span>
+        <span>NOT EVERY FLICKER IS REAL. NOT EVERY ROOM STAYS QUIET.</span>
+      </div>
+
+      <div class="difficulty-section">
+        <div class="difficulty-title">SELECT SHIFT DIFFICULTY</div>
+        <div class="diff-row">
+          <button class="btn diff-btn" data-diff="rookie" type="button"><span>ROOKIE</span><small>SLOWER ANOMALIES</small></button>
+          <button class="btn diff-btn selected" data-diff="standard" type="button"><span>STANDARD</span><small>RECOMMENDED</small></button>
+          <button class="btn diff-btn" data-diff="nightmare" type="button"><span>NIGHTMARE</span><small>GOOD LUCK</small></button>
+          <button class="btn diff-btn extreme" data-diff="no_sleep" type="button"><span>NO SLEEP</span><small>MASOCHIST MODE</small></button>
+        </div>
+      </div>
+
+      <button id="startBtn" class="start-btn" type="button">BEGIN SHIFT</button>
+      <div id="bestLine" class="best-line"></div>
+      <div id="badgeRow" class="progress-line"></div>
+
+      <div class="start-footer">
+        <span>SEC-7 SURVEILLANCE NETWORK</span>
+        <span>NIGHT SHIFT</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="endScreen" class="screen end-screen hidden">
+    <div class="end-content">
+      <div class="end-warning">SURVEILLANCE TERMINATED</div>
+      <h2 id="endTitle" class="end-title">CONNECTION LOST</h2>
+      <p id="endText" class="end-text">The cameras went dark.</p>
+      <p id="tauntText" class="taunt hidden"></p>
+      <div id="attemptLine" class="attempt-line"></div>
+      <div id="endBadges" class="end-badges"></div>
+      <div id="endStats" class="end-stats"></div>
+      <button id="restartBtn" class="start-btn" type="button">RETURN TO MONITORING</button>
+      <div class="end-footer">SEC-7 // CONNECTION CLOSED</div>
+    </div>
+  </section>
+
+  <div id="bigScare" class="big-scare" aria-hidden="true">
+    <div class="scare-face"><div class="scare-eyes"><span></span><span></span></div></div>
+  </div>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

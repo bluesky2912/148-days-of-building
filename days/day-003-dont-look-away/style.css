@@ -1,0 +1,421 @@
+/* =========================================================
+   TOKENS
+   ========================================================= */
+:root{
+  --bg:#050606; --panel:#0b0e0e;
+  --phosphor:#8cff8c; --phosphor-dim:#397a39;
+  --amber:#d6a84f; --alert:#ff3030; --gold:#ffd76a;
+  --text:#b9c4bd; --muted:#56615b; --border:#27302b;
+  --shadow:0 0 25px rgba(0,0,0,.8);
+  --glow:0 0 8px rgba(140,255,140,.35);
+}
+
+/* =========================================================
+   RESET / BASE
+   ========================================================= */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{background:#020303;color:var(--text);font-family:"Courier New",Courier,monospace;overflow:hidden}
+button{font-family:inherit;cursor:pointer;background:none;border:none;color:inherit}
+
+/* =========================================================
+   APP SHELL / CRT LAYERS
+   ========================================================= */
+#app{position:relative;width:100vw;height:100vh;min-height:600px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(ellipse at center,#101414 0%,#060808 65%,#020303 100%);}
+
+#staticCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.07;mix-blend-mode:screen;z-index:100}
+
+#app::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:101;opacity:.5;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px);}
+
+#app::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:102;
+  background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.4) 80%,rgba(0,0,0,.85) 100%);}
+
+#threatVignette{position:fixed;inset:0;pointer-events:none;z-index:103;transition:box-shadow .5s ease}
+
+/* mouse-follow flashlight — subtle "someone is watching back" atmosphere */
+#flashlight{position:fixed;inset:0;pointer-events:none;z-index:15;opacity:.55;mix-blend-mode:soft-light;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(140,255,140,.10),transparent 22%);
+  transition:opacity .3s ease;}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+.hud{position:relative;height:78px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 28px;background:linear-gradient(180deg,#0d1110,#070909);border-bottom:1px solid var(--border);
+  box-shadow:0 5px 20px rgba(0,0,0,.65);z-index:20}
+
+.hud-left{display:flex;flex-direction:column;gap:3px}
+.system-title{color:var(--phosphor);font-size:22px;font-weight:900;letter-spacing:5px;text-shadow:var(--glow)}
+.system-subtitle{color:var(--muted);font-size:9px;letter-spacing:3px}
+
+.hud-center{text-align:center}
+.clock-label{color:var(--muted);font-size:8px;letter-spacing:3px;margin-bottom:4px}
+.clock{color:var(--phosphor);font-size:23px;font-weight:bold;letter-spacing:4px;text-shadow:0 0 8px rgba(140,255,140,.45)}
+.shift-track{width:200px;height:3px;margin-top:8px;background:#0f1412;border:1px solid #232b26}
+.shift-fill{height:100%;width:0%;background:var(--phosphor);box-shadow:0 0 6px rgba(140,255,140,.4);transition:width 1s linear}
+
+.hud-right{justify-self:end;width:230px}
+.stat{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.stat-label{color:var(--muted);font-size:9px;letter-spacing:2px}
+.stat-value{color:var(--phosphor);font-size:13px;font-weight:bold}
+.stat-value.warn{color:var(--amber);text-shadow:0 0 8px rgba(214,168,79,.45)}
+.stat-value.crit{color:var(--alert);text-shadow:0 0 8px rgba(255,48,48,.55);animation:criticalPulse .8s infinite}
+
+.meter-track{width:100%;height:7px;margin-bottom:10px;border:1px solid #29322e;background:#050707;overflow:hidden}
+.meter-fill{width:100%;height:100%;background:var(--phosphor);box-shadow:0 0 8px rgba(140,255,140,.3);transition:width .3s ease,background .3s ease}
+#threatFill{background:var(--phosphor-dim);transition:none}
+
+/* =========================================================
+   GAME AREA
+   ========================================================= */
+.game-area{position:relative;height:calc(100vh - 78px);padding:16px 18px;display:grid;
+  grid-template-columns:minmax(0,1fr) 260px;grid-template-rows:minmax(0,1fr) 82px;gap:14px;z-index:5}
+
+.camera-grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));gap:12px}
+
+/* =========================================================
+   CAMERA
+   ========================================================= */
+.cam{position:relative;min-width:0;min-height:0;overflow:hidden;background:#080a0a;border:1px solid #28312d;
+  box-shadow:inset 0 0 35px rgba(0,0,0,.8),0 4px 16px rgba(0,0,0,.55);cursor:crosshair;
+  transition:border-color .15s ease,box-shadow .15s ease}
+.cam:hover,.cam.watching{border-color:rgba(140,255,140,.65);box-shadow:inset 0 0 35px rgba(0,0,0,.75),0 0 14px rgba(140,255,140,.08)}
+.cam.wrong-flash{animation:wrongFlash .3s ease}
+.cam.right-flash{animation:rightFlash .35s ease}
+
+.cam-topbar{position:absolute;left:0;right:0;top:0;height:28px;padding:0 9px;display:flex;justify-content:space-between;
+  align-items:center;z-index:40;background:linear-gradient(180deg,rgba(4,6,6,.92),rgba(4,6,6,.65));
+  border-bottom:1px solid rgba(255,255,255,.04);color:#65716a;font-size:8px;letter-spacing:1.5px}
+.cam-topbar .id{color:var(--phosphor);font-weight:bold;margin:0 5px}
+.rec-dot{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:#ff2525;
+  box-shadow:0 0 7px rgba(255,40,40,.8);animation:recBlink 1s infinite}
+.ts{color:#4e5a53;font-size:8px;letter-spacing:1px}
+
+.scene{position:absolute;inset:28px 0 22px 0;overflow:hidden;background:#111;filter:contrast(.95) brightness(.75)}
+.scene::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 5px,rgba(255,255,255,.015) 6px)}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:60;
+  background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.58) 100%)}
+
+.floor{position:absolute;left:0;right:0;bottom:22px;height:10px;z-index:20;border-top:1px solid #252b28;
+  background:repeating-linear-gradient(90deg,#111 0,#111 35px,#171b19 36px,#111 38px)}
+
+.cam-bottombar{position:absolute;left:0;right:0;bottom:0;height:22px;padding:0 9px;display:flex;align-items:center;
+  justify-content:space-between;z-index:45;background:rgba(4,6,6,.9);color:#47534c;font-size:7px;letter-spacing:1.3px}
+.watch-tag{color:#4f6557}
+.cam.watching .watch-tag{color:var(--phosphor);text-shadow:0 0 7px rgba(140,255,140,.4)}
+
+.room-noise{position:absolute;inset:0;pointer-events:none;z-index:55;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(255,255,255,.012) 4px)}
+
+.floater{position:absolute;pointer-events:none;z-index:75;font-weight:bold;font-size:14px;letter-spacing:1px;
+  color:var(--phosphor);text-shadow:0 0 8px rgba(140,255,140,.6);animation:floatUp .9s ease forwards;white-space:nowrap}
+.floater.bad{color:var(--alert);text-shadow:0 0 8px rgba(255,48,48,.6)}
+
+/* decoy — a false signal spike, punishes trigger-happy clicking */
+.scene.decoy-flicker{animation:decoyFlicker .11s infinite}
+@keyframes decoyFlicker{0%{filter:brightness(1) contrast(.95)}25%{filter:brightness(2.2) contrast(1.4)}
+  50%{filter:brightness(.35) contrast(.9)}75%{filter:brightness(1.8) contrast(1.3)}100%{filter:brightness(1) contrast(.95)}}
+
+/* presence — a hidden dread meter on one unwatched room; only a faint tell if you're paying attention */
+.cam.presence-warn{animation:presencePulse 2.2s ease-in-out infinite}
+@keyframes presencePulse{0%,100%{box-shadow:inset 0 0 35px rgba(0,0,0,.8),0 0 0 rgba(255,48,48,0)}
+  50%{box-shadow:inset 0 0 35px rgba(0,0,0,.8),0 0 16px rgba(255,48,48,.22)}}
+
+/* manifestation — the payoff when a neglected room finally reveals what was waiting */
+.manifest-flash{position:absolute;inset:0;z-index:90;pointer-events:none;
+  background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.95),rgba(0,0,0,.97) 62%);animation:manifestFlash .26s ease-out}
+@keyframes manifestFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+
+/* =========================================================
+   ROOM BASES
+   ========================================================= */
+.room-wall{position:absolute;inset:0 0 28% 0;background:linear-gradient(90deg,rgba(255,255,255,.025),transparent 20%,transparent 80%,rgba(255,255,255,.02)),#111}
+.room-shadow{position:absolute;width:40%;height:25%;bottom:10%;left:20%;background:#000;opacity:.25;filter:blur(18px);z-index:5}
+
+/* CAM 01 — LIVING ROOM */
+.room-0{background:linear-gradient(180deg,#171717 0%,#111 70%,#080808 70%)}
+.window{position:absolute;width:23%;height:35%;top:12%;left:8%;border:5px solid #292929;box-shadow:inset 0 0 30px #000;
+  background:linear-gradient(180deg,#05080a,#101719)}
+.window::before{content:"";position:absolute;width:2px;height:100%;left:50%;background:#292929}
+.sofa{position:absolute;width:38%;height:25%;left:31%;bottom:15%;z-index:12}
+.sofa-back{position:absolute;width:100%;height:65%;top:0;background:#292929;border-radius:14px 14px 5px 5px}
+.sofa-seat{position:absolute;width:100%;height:35%;bottom:0;background:#242424}
+.sofa-arm{position:absolute;width:12%;height:70%;top:5%;background:#303030}
+.sofa-arm.left{left:-5%} .sofa-arm.right{right:-5%}
+.coffee-table{position:absolute;width:22%;height:8%;left:39%;bottom:7%;z-index:14}
+.table-top{position:absolute;inset:0;background:#292929;border-radius:50%}
+.table-leg{position:absolute;width:5%;height:100%;top:50%;background:#171717}
+.table-leg.one{left:30%} .table-leg.two{right:30%}
+.lamp{position:absolute;right:13%;bottom:14%;width:10%;height:45%;z-index:13}
+.lamp-shade{position:absolute;top:0;width:100%;height:28%;background:#353535;clip-path:polygon(15% 0,85% 0,100% 100%,0 100%)}
+.lamp-stand{position:absolute;width:6%;height:72%;left:47%;top:23%;background:#383838}
+.door{position:absolute;width:14%;height:52%;right:5%;top:22%;background:#171717;border:4px solid #292929;z-index:10}
+.door-handle{position:absolute;right:12%;top:52%;width:7px;height:7px;border-radius:50%;background:#555}
+.painting{position:absolute;width:15%;height:20%;top:15%;right:27%;border:5px solid #292929;z-index:8;
+  background:radial-gradient(circle at 40% 40%,#333,#111 70%)}
+
+/* CAM 02 — HALLWAY */
+.room-1{background:linear-gradient(90deg,#101010,#191919 50%,#101010)}
+.hall-floor{position:absolute;bottom:0;left:0;width:100%;height:30%;z-index:5;transform:perspective(500px) rotateX(35deg);transform-origin:bottom;
+  background:repeating-linear-gradient(90deg,#111 0,#111 9%,#181818 10%,#111 11%)}
+.hall-door{position:absolute;width:16%;height:48%;top:23%;background:#141414;border:4px solid #292929;z-index:10}
+.hall-door span{position:absolute;top:8%;left:10%;color:#444;font-size:12px}
+.door-left{left:7%} .door-right{right:7%}
+.hall-end-door{position:absolute;width:18%;height:45%;left:41%;top:25%;background:#080808;border:5px solid #242424;
+  box-shadow:0 0 35px rgba(255,255,255,.03);z-index:12}
+.hall-end-door span{position:absolute;top:10%;left:35%;color:#3c3c3c;font-size:11px}
+.hall-light{position:absolute;width:14%;height:4%;background:#777;opacity:.25;box-shadow:0 0 30px rgba(255,255,255,.3);z-index:15}
+.light-one{top:8%;left:20%} .light-two{top:8%;left:43%} .light-three{top:8%;right:20%}
+.hall-shadow{position:absolute;width:16%;height:40%;left:42%;top:30%;background:#000;opacity:.35;filter:blur(20px);z-index:18}
+
+/* CAM 03 — BEDROOM */
+.room-2{background:linear-gradient(180deg,#151515,#101010 72%,#090909 72%)}
+.bed{position:absolute;width:52%;height:36%;left:23%;bottom:13%;z-index:12}
+.bed-head{position:absolute;width:100%;height:75%;top:0;background:#252525;border-radius:10px 10px 0 0}
+.mattress{position:absolute;width:94%;height:34%;left:3%;bottom:10%;background:#303030}
+.pillow{position:absolute;width:25%;height:18%;left:10%;top:27%;background:#454545;border-radius:7px}
+.blanket{position:absolute;width:55%;height:30%;right:5%;bottom:15%;background:#1b1b1b}
+.bed-leg{position:absolute;width:8%;height:25%;left:10%;bottom:-15%;background:#111}
+.bedside-table{position:absolute;width:13%;height:18%;left:8%;bottom:14%;background:#202020;border:3px solid #292929;z-index:13}
+.bedside-lamp{position:absolute;left:11%;bottom:32%;width:7%;height:20%;z-index:14}
+.bedside-lamp::before{content:"";position:absolute;width:100%;height:40%;background:#555;clip-path:polygon(15% 0,85% 0,100% 100%,0 100%)}
+.lamp-glow{position:absolute;width:160%;height:160%;left:-30%;top:-30%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,210,120,.08),transparent 65%)}
+.bedroom-door{position:absolute;width:14%;height:55%;right:8%;top:20%;background:#111;border:4px solid #292929;z-index:10}
+.bedroom-window{position:absolute;width:20%;height:28%;right:28%;top:10%;border:5px solid #292929;background:#06090a;z-index:8}
+
+/* CAM 04 — MIRROR ROOM */
+.room-3{background:radial-gradient(ellipse at center,#1b1b1b,#080808 80%)}
+.mirror-frame{position:absolute;width:38%;height:60%;left:31%;top:12%;padding:12px;background:#292929;
+  box-shadow:0 0 30px rgba(0,0,0,.8);z-index:12}
+.mirror-glass{position:relative;width:100%;height:100%;overflow:hidden;
+  background:linear-gradient(120deg,#1d292b,#0b1112,#1a2426)}
+.mirror-reflection{position:absolute;width:40%;height:75%;left:30%;top:15%;opacity:.18;background:#444;border-radius:45% 45% 15% 15%;transition:transform .3s ease}
+.mirror-chair{position:absolute;width:18%;height:18%;left:41%;bottom:9%;background:#242424;z-index:15}
+.mirror-table{position:absolute;width:25%;height:5%;right:8%;bottom:12%;background:#292929;z-index:15}
+.mirror-shadow{position:absolute;width:30%;height:18%;left:35%;bottom:7%;background:#000;opacity:.4;filter:blur(15px);z-index:10}
+
+/* =========================================================
+   ENTITY
+   ========================================================= */
+.entity-figure{position:absolute;width:45px;height:110px;z-index:35;pointer-events:none;filter:drop-shadow(0 0 10px rgba(0,0,0,.8))}
+.entity-figure .head{position:absolute;width:38px;height:38px;left:3px;top:0;border-radius:50%;background:#050505}
+.entity-figure .body{position:absolute;width:45px;height:75px;left:0;top:32px;background:#050505;border-radius:45% 45% 10% 10%}
+.entity-figure .eyes{position:absolute;display:flex;gap:9px;left:9px;top:14px;z-index:3}
+.entity-figure .eyes span{width:5px;height:5px;border-radius:50%;background:#d9ffd9;box-shadow:0 0 8px rgba(180,255,180,.8);animation:eyeBlink 2.6s infinite}
+
+/* =========================================================
+   ANOMALIES
+   ========================================================= */
+.anomaly-missing .sofa{opacity:.15}
+.anomaly-moved .sofa{transform:translate(25px,-12px)}
+.anomaly-moved .hall-end-door{transform:translateX(12px)}
+.anomaly-light .lamp{filter:brightness(2.5)}
+.anomaly-light .hall-light{opacity:.8}
+.anomaly-added .painting{transform:scale(1.15)}
+.anomaly-shadow .room-shadow,.anomaly-shadow .mirror-shadow{opacity:.85;transform:scale(1.35)}
+.anomaly-shadow .hall-shadow{opacity:.85;transform:translateX(-30px) scale(1.5)}
+.anomaly-entity .entity-figure.slot{opacity:1 !important}
+.anomaly-glitch{animation:roomGlitch .16s infinite}
+.anomaly-mirror .mirror-reflection{opacity:.8;transform:translateX(15px) scaleX(-1)}
+.anomaly-mirror .mirror-glass{filter:contrast(1.4) brightness(.7)}
+
+@keyframes roomGlitch{0%,100%{filter:none}30%{filter:contrast(1.4) brightness(.7)}60%{filter:hue-rotate(20deg)}}
+
+.glitch-veil{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:80;color:#cfcfcf;
+  font-size:12px;letter-spacing:4px;background:rgba(0,0,0,.75);opacity:.65;pointer-events:none;animation:signalFlicker .12s infinite}
+@keyframes signalFlicker{0%{opacity:.15}50%{opacity:.75}100%{opacity:.3}}
+
+/* =========================================================
+   CONTROL PANEL
+   ========================================================= */
+.control-panel{grid-column:1;grid-row:2;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:0 18px;
+  background:linear-gradient(180deg,#0d1110,#080a0a);border:1px solid var(--border);box-shadow:var(--shadow)}
+.control-left,.control-center,.control-right{display:flex;align-items:center;gap:10px}
+.control-center{justify-content:center}
+.control-right{justify-content:flex-end;color:#536158;font-size:8px;letter-spacing:2px}
+.control-label,.streak-label{color:var(--muted);font-size:8px;letter-spacing:2px}
+.score{color:var(--phosphor);font-size:22px;font-weight:bold;text-shadow:0 0 8px rgba(140,255,140,.3)}
+.score-label{color:#3d4942;font-size:7px}
+.streak{color:var(--amber);font-size:19px;font-weight:bold;transition:color .2s ease}
+.streak.hot{color:var(--alert);text-shadow:0 0 10px rgba(255,48,48,.5)}
+.status-light{width:7px;height:7px;border-radius:50%;background:var(--phosphor);box-shadow:0 0 8px rgba(140,255,140,.7);animation:statusPulse 1.5s infinite}
+.pause-btn{padding:6px 10px;border:1px solid #2c3630;color:#7c8a80;font-size:8px;letter-spacing:2px;transition:all .15s ease}
+.pause-btn:hover{border-color:var(--phosphor);color:var(--phosphor)}
+
+/* =========================================================
+   EVENT PANEL
+   ========================================================= */
+.event-panel{grid-column:2;grid-row:1 / span 2;min-height:0;display:flex;flex-direction:column;background:#080b0a;
+  border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.panel-heading{height:34px;flex-shrink:0;padding:0 11px;display:flex;align-items:center;justify-content:space-between;
+  background:#0d1110;border-bottom:1px solid var(--border);color:#59665e;font-size:8px;letter-spacing:2px}
+.log-feed{flex:1;min-height:0;padding:10px;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.log-entry{color:#4c5951;font-size:8px;line-height:1.5;word-break:break-word}
+.log-entry::before{content:"> ";color:#344139}
+.log-entry.sys-good{color:var(--phosphor)}
+.log-entry.sys-alert{color:var(--alert);text-shadow:0 0 5px rgba(255,48,48,.25)}
+.log-entry.sys-gold{color:var(--gold);text-shadow:0 0 5px rgba(255,215,106,.3)}
+.log-entry.new{animation:logAppear .3s ease}
+@keyframes logAppear{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+
+/* =========================================================
+   OVERLAYS: manipulation / pause / achievement toast
+   ========================================================= */
+.manip-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:200;
+  pointer-events:none;opacity:0;color:#f2f2f2;font-size:clamp(20px,3.4vw,52px);font-weight:900;letter-spacing:6px;text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.8),0 0 30px rgba(255,40,40,.4);background:rgba(0,0,0,.45);transition:opacity .12s ease}
+.manip-overlay.show{opacity:1;animation:textGlitch .16s infinite}
+@keyframes textGlitch{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(5px)}75%{transform:translateX(-2px)}}
+
+.pause-overlay{position:absolute;inset:16px 274px 96px 18px;z-index:220;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;background:rgba(2,4,4,.92);border:1px solid var(--border);opacity:0;pointer-events:none;transition:opacity .25s ease}
+.pause-overlay.show{opacity:1;pointer-events:auto}
+.pause-overlay h2{color:var(--phosphor);letter-spacing:6px;font-size:20px;text-shadow:var(--glow)}
+.pause-overlay p{color:var(--muted);font-size:10px;letter-spacing:1px;max-width:320px;text-align:center;line-height:1.7}
+.resume-btn{padding:12px 26px;border:1px solid rgba(140,255,140,.55);color:var(--phosphor);font-size:10px;letter-spacing:3px;
+  background:#101712;transition:all .2s ease}
+.resume-btn:hover{background:#17231a;box-shadow:0 0 18px rgba(140,255,140,.1)}
+
+.toast{position:fixed;top:92px;right:24px;z-index:400;padding:12px 16px;min-width:220px;background:#0b0f0d;
+  border:1px solid var(--gold);box-shadow:0 0 20px rgba(255,215,106,.15);opacity:0;transform:translateX(20px) scale(.9);
+  transition:opacity .35s cubic-bezier(.34,1.56,.64,1),transform .35s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{opacity:1;transform:translateX(0) scale(1)}
+.toast-label{color:var(--gold);font-size:8px;letter-spacing:3px;margin-bottom:5px}
+.toast-name{color:#e9e9e0;font-size:11px;letter-spacing:1px;font-weight:bold}
+.toast-desc{color:#75806f;font-size:8px;margin-top:4px;line-height:1.5}
+
+/* =========================================================
+   JUMPSCARE
+   ========================================================= */
+.jumpscare-flash{position:fixed;inset:0;z-index:300;pointer-events:none;background:#fff;opacity:0}
+.big-scare{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.95);opacity:0;pointer-events:none;transform:scale(1.15)}
+.big-scare.show{opacity:1;animation:scareZoom .28s ease-out}
+.scare-face{position:relative;width:clamp(180px,25vw,360px);height:clamp(260px,40vw,500px);background:#020202;
+  border-radius:50% 50% 45% 45%;box-shadow:0 0 60px rgba(255,255,255,.05)}
+.scare-eyes{position:absolute;top:25%;left:50%;transform:translateX(-50%);display:flex;gap:60px}
+.scare-eyes span{width:25px;height:45px;background:#eee;border-radius:50%;box-shadow:0 0 25px rgba(255,255,255,.8)}
+@keyframes scareZoom{0%{opacity:0;transform:scale(1.7)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
+
+/* =========================================================
+   START / END SCREENS
+   ========================================================= */
+.screen{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:30px;
+  background:radial-gradient(ellipse at center,rgba(14,20,17,.97),rgba(2,4,4,.99));
+  transition:opacity .4s ease,visibility .4s ease;overflow-y:auto}
+.screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.start-content,.end-content{width:min(720px,92vw);text-align:center;padding:45px 35px;border:1px solid #26302b;
+  background:rgba(7,10,9,.85);box-shadow:0 0 70px rgba(0,0,0,.8);margin:auto}
+
+.warning,.end-warning{color:var(--alert);font-size:9px;letter-spacing:4px;margin-bottom:18px;animation:statusPulse 2s infinite}
+.start-content h1{color:#d7e0da;font-size:clamp(40px,7vw,78px);letter-spacing:clamp(5px,1vw,12px);line-height:1;
+  margin-bottom:24px;text-shadow:0 0 20px rgba(140,255,140,.1)}
+.start-description{color:#69766e;font-size:11px;line-height:2;letter-spacing:1px;margin-bottom:22px}
+
+.warning-box{width:fit-content;max-width:100%;margin:0 auto 24px;padding:12px 18px;display:flex;align-items:center;gap:10px;
+  border:1px solid rgba(255,48,48,.25);color:#805050;font-size:8px;letter-spacing:1px}
+.warning-symbol{color:var(--alert);font-size:15px}
+
+.progress-line{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.badge-chip{padding:5px 9px;border:1px solid #2a332e;color:#3d4942;font-size:7px;letter-spacing:1px;cursor:default}
+.badge-chip.unlocked{border-color:var(--gold);color:var(--gold)}
+
+.difficulty-section{margin-bottom:28px}
+.difficulty-title{color:#4e5b53;font-size:8px;letter-spacing:3px;margin-bottom:12px}
+.diff-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.diff-btn{min-width:145px;padding:12px 18px;display:flex;flex-direction:column;gap:5px;background:#0c100e;
+  border:1px solid #27302b;color:#65736a;transition:border-color .2s ease,color .2s ease,background .2s ease,transform .2s ease}
+.diff-btn span{font-size:9px;letter-spacing:2px}
+.diff-btn small{color:#3e4942;font-size:6px;letter-spacing:1px}
+.diff-btn:hover{border-color:#52665a;color:#a2b3a8;transform:translateY(-2px)}
+.diff-btn.selected{border-color:rgba(140,255,140,.6);color:var(--phosphor);background:#101712;box-shadow:0 0 12px rgba(140,255,140,.06)}
+.diff-btn.selected small{color:#527058}
+.diff-btn.extreme{border-color:#3a2323}
+.diff-btn.extreme:hover{border-color:#7a3a3a;color:#d99}
+.diff-btn.extreme.selected{border-color:rgba(255,48,48,.6);color:var(--alert);background:#170f0f;box-shadow:0 0 12px rgba(255,48,48,.12)}
+.diff-btn.extreme.selected small{color:#8a4a4a}
+
+.start-btn{position:relative;min-width:230px;padding:15px 25px;background:#101712;border:1px solid rgba(140,255,140,.55);
+  color:var(--phosphor);font-size:10px;font-weight:bold;letter-spacing:4px;box-shadow:0 0 18px rgba(140,255,140,.05);
+  transition:background .2s ease,box-shadow .2s ease,transform .2s ease}
+.start-btn:hover{background:#17231a;box-shadow:0 0 25px rgba(140,255,140,.12);transform:translateY(-2px)}
+.start-btn:active{transform:translateY(1px)}
+
+.best-line{min-height:15px;margin-top:18px;color:#4c6252;font-size:7px;letter-spacing:1px}
+.start-footer{margin-top:30px;display:flex;justify-content:space-between;color:#303a34;font-size:6px;letter-spacing:2px}
+
+.end-content{max-width:700px}
+.end-title{color:var(--phosphor);font-size:clamp(28px,5vw,55px);letter-spacing:5px;margin-bottom:20px;text-shadow:0 0 15px rgba(140,255,140,.25)}
+.end-title.danger{color:var(--alert);text-shadow:0 0 15px rgba(255,48,48,.35)}
+.end-text{max-width:600px;margin:0 auto 18px;color:#657169;font-size:10px;line-height:1.8}
+.taunt{margin-bottom:20px;color:var(--alert);font-size:11px;font-weight:bold;letter-spacing:1px}
+.attempt-line{color:#4c6252;font-size:8px;letter-spacing:2px;margin-bottom:16px}
+.end-stats{padding:16px;margin:0 auto 20px;max-width:500px;border:1px solid #252d29;background:#090d0b;
+  color:#6f7d74;font-size:9px;line-height:2;letter-spacing:1px;text-align:left}
+.end-stats strong{color:var(--phosphor);float:right}
+.end-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.end-badges .badge-chip{border-color:var(--gold);color:var(--gold);animation:badgePop .4s ease}
+@keyframes badgePop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.end-footer{margin-top:22px;color:#303a34;font-size:6px;letter-spacing:3px}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+@keyframes recBlink{0%,45%{opacity:1}50%,100%{opacity:.25}}
+@keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes criticalPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes eyeBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes floatUp{0%{opacity:0;transform:translateY(6px) scale(.9)}15%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-42px) scale(1.05)}}
+@keyframes wrongFlash{0%,100%{box-shadow:inset 0 0 35px rgba(0,0,0,.8);transform:translate(0,0)}
+  30%{box-shadow:inset 0 0 40px rgba(255,48,48,.4);transform:translate(-3px,2px)}60%{transform:translate(3px,-2px)}}
+@keyframes rightFlash{0%,100%{box-shadow:inset 0 0 35px rgba(0,0,0,.8);transform:translate(0,0)}
+  30%{box-shadow:inset 0 0 40px rgba(140,255,140,.5);transform:translate(2px,-2px)}60%{transform:translate(-2px,1px)}}
+.streak.pop{animation:streakPop .3s ease}
+@keyframes streakPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.start-content h1.h1-glitch{animation:titleGlitch .18s steps(2,end)}
+@keyframes titleGlitch{0%{transform:translate(0)}20%{transform:translate(-3px,1px);text-shadow:2px 0 var(--alert),-2px 0 var(--phosphor)}
+  50%{transform:translate(3px,-1px)}80%{transform:translate(-1px,0)}100%{transform:translate(0)}}
+
+#app.shake{animation:screenShake .38s ease}
+@keyframes screenShake{0%{transform:translate(0,0)}15%{transform:translate(-5px,3px)}30%{transform:translate(4px,-3px)}
+  45%{transform:translate(-3px,-2px)}60%{transform:translate(5px,2px)}75%{transform:translate(-2px,1px)}100%{transform:translate(0,0)}}
+#app.chroma-burst{filter:saturate(1.7) contrast(1.15)}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:1000px){
+  .game-area{grid-template-columns:minmax(0,1fr) 210px}
+  .hud-right{width:180px}
+  .pause-overlay{right:224px}
+}
+@media (max-width:800px){
+  body{overflow:auto}
+  #app{min-height:100vh;height:auto;overflow:visible}
+  .hud{height:auto;min-height:80px;grid-template-columns:1fr 1fr;padding:12px 15px;gap:10px}
+  .hud-center{display:none}
+  .hud-right{width:170px;justify-self:end}
+  .game-area{height:auto;min-height:calc(100vh - 80px);display:flex;flex-direction:column;padding:12px}
+  .camera-grid{min-height:560px;grid-template-columns:1fr 1fr}
+  .event-panel{height:150px;order:3}
+  .control-panel{order:2;min-height:70px}
+  .pause-overlay{inset:12px 12px 250px 12px}
+}
+@media (max-width:560px){
+  .camera-grid{grid-template-columns:1fr;grid-template-rows:repeat(4,220px);min-height:auto}
+  .control-panel{grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+  .control-right{display:none}
+  .event-panel{height:140px}
+  .start-content,.end-content{padding:30px 18px}
+  .start-content h1{font-size:36px;letter-spacing:5px}
+  .diff-btn{width:100%;min-width:0}
+  .diff-row{flex-direction:column}
+  .start-btn{width:100%}
+  .start-footer{flex-direction:column;gap:8px}
+  .toast{right:12px;left:12px;min-width:0}
+}
