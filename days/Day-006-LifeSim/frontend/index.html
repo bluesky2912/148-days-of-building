@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeSim — an artificial life laboratory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">LifeSim</span>
+      <span class="brand-tagline">an artificial life laboratory — Day 006 · core loop build</span>
+    </div>
+    <div class="connection-status" id="connectionStatus" data-state="connecting">
+      <span class="status-dot"></span><span class="status-label">connecting…</span>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="viewport-wrap">
+      <div class="viewport-frame">
+        <canvas id="worldCanvas"></canvas>
+        <div class="viewport-vignette" aria-hidden="true"></div>
+        <div class="viewport-hud" id="canvasHud">GEN — · POP — · TICK —</div>
+        <p class="viewport-hint">click a creature to open its specimen card</p>
+      </div>
+    </section>
+
+    <aside class="control-rail">
+
+      <div class="panel controls-panel">
+        <h2 class="panel-title">Controls</h2>
+        <div class="transport-buttons">
+          <button id="btnStart" class="btn btn-primary" type="button">▶ Start</button>
+          <button id="btnPause" class="btn" type="button">Ⅱ Pause</button>
+          <button id="btnReset" class="btn btn-danger" type="button">↻ Reset</button>
+        </div>
+        <div class="speed-control">
+          <span class="field-label">Simulation speed</span>
+          <div class="speed-buttons" id="speedButtons">
+            <button class="speed-btn active" data-speed="1" type="button">1×</button>
+            <button class="speed-btn" data-speed="5" type="button">5×</button>
+            <button class="speed-btn" data-speed="10" type="button">10×</button>
+            <button class="speed-btn" data-speed="50" type="button">50×</button>
+            <button class="speed-btn" data-speed="100" type="button">100×</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel readout-panel">
+        <h2 class="panel-title">Readout</h2>
+        <dl class="readout-grid">
+          <div class="readout-item"><dt>Generation</dt><dd id="statGeneration">—</dd></div>
+          <div class="readout-item"><dt>Population</dt><dd id="statPopulation">—</dd></div>
+          <div class="readout-item"><dt>Food</dt><dd id="statFood">—</dd></div>
+          <div class="readout-item"><dt>Births</dt><dd id="statBirths">—</dd></div>
+          <div class="readout-item"><dt>Deaths</dt><dd id="statDeaths">—</dd></div>
+          <div class="readout-item"><dt>Mutations</dt><dd id="statMutations">—</dd></div>
+          <div class="readout-item readout-wide"><dt>Sim rate</dt><dd id="statTickRate">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="panel traits-panel">
+        <h2 class="panel-title">Evolving traits</h2>
+
+        <div class="trait-chart">
+          <div class="trait-chart-header"><span>Population</span><span class="trait-chart-value" id="vPopulation">—</span></div>
+          <canvas class="sparkline" id="chartPopulation" width="240" height="44"></canvas>
+        </div>
+
+        <div class="trait-chart">
+          <div class="trait-chart-header"><span>Avg. speed</span><span class="trait-chart-value" id="vSpeed">—</span></div>
+          <canvas class="sparkline" id="chartSpeed" width="240" height="44"></canvas>
+        </div>
+
+        <div class="trait-chart">
+          <div class="trait-chart-header"><span>Avg. vision</span><span class="trait-chart-value" id="vVision">—</span></div>
+          <canvas class="sparkline" id="chartVision" width="240" height="44"></canvas>
+        </div>
+
+        <div class="trait-chart">
+          <div class="trait-chart-header"><span>Avg. size</span><span class="trait-chart-value" id="vSize">—</span></div>
+          <canvas class="sparkline" id="chartSize" width="240" height="44"></canvas>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <div class="inspector" id="inspector" hidden></div>
+
+</div>
+
+<script src="websocket.js"></script>
+<script src="canvas.js"></script>
+<script src="charts.js"></script>
+<script src="inspector.js"></script>
+<script src="controls.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
